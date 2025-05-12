@@ -73,77 +73,71 @@ function StudentList() {
 
 	if (loading) {
 		return (
-			<div className='text-center my-5'>
-				<div className='spinner-border' role='status'></div>
+			<div className='flex justify-center items-center my-12'>
+				<div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500'></div>
 			</div>
 		);
 	}
 
 	if (error) {
-		return <div className='alert alert-danger my-3'>Error: {error}</div>;
+		return <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded my-4'>Error: {error}</div>;
 	}
 
 	return (
-		<div className='container mt-4'>
-			<div className='row mb-4'>
-				<div className='col-md-6'>
-					<h2>Student List</h2>
-				</div>
-				<div className='col-md-6 text-end'>
-					<div className='d-flex justify-content-end'>
-						<div className='me-3'>
-							<select
-								className='form-select'
-								value={program}
-								onChange={handleProgramChange}>
-								<option value=''>All Programs</option>
-								{programs.map((prog) => (
-									<option key={prog} value={prog}>
-										{prog}
-									</option>
-								))}
-							</select>
-						</div>
-						<Link to='/add-student' className='btn btn-primary'>
-							Add New Student
-						</Link>
-					</div>
+		<div className='mt-6'>
+			<div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6'>
+				<h2 className='text-2xl font-bold text-gray-800 mb-4 md:mb-0'>Student List</h2>
+				<div className='flex flex-col sm:flex-row gap-3 w-full md:w-auto'>
+					<select
+						className='bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+						value={program}
+						onChange={handleProgramChange}>
+						<option value=''>All Programs</option>
+						{programs.map((prog) => (
+							<option key={prog} value={prog}>
+								{prog}
+							</option>
+						))}
+					</select>
+					<Link to='/add-student' className='bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition duration-300'>
+						Add New Student
+					</Link>
 				</div>
 			</div>
 
 			{students.length === 0 ? (
-				<div className='alert alert-info'>No students found.</div>
+				<div className='bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 my-4'>No students found.</div>
 			) : (
-				<div className='table-responsive'>
-					<table className='table table-striped table-hover'>
-						<thead className='table-dark'>
+				<div className='overflow-x-auto shadow-md rounded-lg'>
+					<table className='min-w-full divide-y divide-gray-200'>
+						<thead className='bg-gray-800 text-white'>
 							<tr>
-								<th>Student ID</th>
-								<th>Name</th>
-								<th>Email</th>
-								<th>Phone</th>
-								<th>Program</th>
-								<th>Batch Year</th>
-								<th>Actions</th>
+								<th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Student ID</th>
+								<th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Name</th>
+								<th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Email</th>
+								<th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Phone</th>
+								<th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Program</th>
+								<th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Batch Year</th>
+								<th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Actions</th>
 							</tr>
 						</thead>
-						<tbody>
+						<tbody className='bg-white divide-y divide-gray-200'>
 							{students.map((student) => (
-								<tr key={student._id || student.studentId}>
-									<td>{student.studentId}</td>
-									<td>{student.name}</td>
-									<td>{student.email}</td>
-									<td>{student.phone}</td>
-									<td>{student.program}</td>
-									<td>{student.batchYear}</td>
-									<td>
+								<tr key={student._id || student.studentId} className='hover:bg-gray-50'>
+									<td className='px-6 py-4 whitespace-nowrap'>{student.studentId}</td>
+									<td className='px-6 py-4 whitespace-nowrap'>{student.name}</td>
+									<td className='px-6 py-4 whitespace-nowrap'>{student.email}</td>
+									<td className='px-6 py-4 whitespace-nowrap'>{student.phone}</td>
+									<td className='px-6 py-4 whitespace-nowrap'>{student.program}</td>
+									<td className='px-6 py-4 whitespace-nowrap'>{student.batchYear}</td>
+									<td className='px-6 py-4 whitespace-nowrap'>
 										<Link
 											to={`/edit-student/${student.studentId}`}
-											className='btn btn-sm btn-warning me-2'>
+											className='bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-1 px-3 rounded mr-2 transition duration-300'>
 											Edit
 										</Link>
 										<button
-											className='btn btn-sm btn-danger'
+											className='bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded transition duration-300'
 											onClick={() => handleDelete(student.studentId)}>
 											Delete
 										</button>

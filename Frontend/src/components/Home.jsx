@@ -2,59 +2,51 @@ import { Link } from 'react-router-dom';
 
 function Home() {
 	return (
-		<div className='container mt-5'>
-			<div className='row'>
-				<div className='col-md-8 offset-md-2 text-center'>
-					<div className='jumbotron'>
-						<h1 className='display-4'>Student Management System</h1>
-						<p className='lead'>
-							A comprehensive solution for managing student records with easy
-							access and maintenance.
-						</p>
-						<hr className='my-4' />
-						<p>
-							This system allows you to add, view, update and delete student
-							information efficiently.
-						</p>
-						<div className='d-flex justify-content-center gap-2 mt-4'>
-							<Link to='/students' className='btn btn-primary btn-lg'>
-								View Students
-							</Link>
-							<Link to='/add-student' className='btn btn-success btn-lg'>
-								Add New Student
-							</Link>
-						</div>
-					</div>
+		<div className='max-w-4xl mx-auto mt-10 px-4 sm:px-6 lg:px-8'>
+			<div className='text-center'>
+				<h1 className='text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl'>
+					Student Management System
+				</h1>
+				<p className='mt-5 text-xl text-gray-500'>
+					A comprehensive solution for managing student records with easy
+					access and maintenance.
+				</p>
+				<hr className='my-8 border-gray-200' />
+				<p className='text-lg text-gray-600'>
+					This system allows you to add, view, update and delete student
+					information efficiently.
+				</p>
+				<div className='mt-8 flex flex-wrap justify-center gap-4'>
+					<Link to='/students' className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300'>
+						View Students
+					</Link>
+					<Link to='/add-student' className='bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300'>
+						Add New Student
+					</Link>
+				</div>
+			</div>
 
-					<div className='row mt-5'>
-						<div className='col-md-4'>
-							<div className='card mb-4'>
-								<div className='card-body'>
-									<h3 className='card-title'>Create</h3>
-									<p className='card-text'>
-										Add new student records with validation.
-									</p>
-								</div>
-							</div>
-						</div>
-						<div className='col-md-4'>
-							<div className='card mb-4'>
-								<div className='card-body'>
-									<h3 className='card-title'>Manage</h3>
-									<p className='card-text'>
-										Update and maintain student information.
-									</p>
-								</div>
-							</div>
-						</div>
-						<div className='col-md-4'>
-							<div className='card mb-4'>
-								<div className='card-body'>
-									<h3 className='card-title'>Search</h3>
-									<p className='card-text'>Filter students by program.</p>
-								</div>
-							</div>
-						</div>
+			<div className='mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3'>
+				<div className='bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300'>
+					<div className='p-6'>
+						<h3 className='text-xl font-bold text-gray-900 mb-2'>Create</h3>
+						<p className='text-gray-600'>
+							Add new student records with validation.
+						</p>
+					</div>
+				</div>
+				<div className='bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300'>
+					<div className='p-6'>
+						<h3 className='text-xl font-bold text-gray-900 mb-2'>Manage</h3>
+						<p className='text-gray-600'>
+							Update and maintain student information.
+						</p>
+					</div>
+				</div>
+				<div className='bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300'>
+					<div className='p-6'>
+						<h3 className='text-xl font-bold text-gray-900 mb-2'>Search</h3>
+						<p className='text-gray-600'>Filter students by program.</p>
 					</div>
 				</div>
 			</div>

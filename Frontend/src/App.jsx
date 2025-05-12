@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './App.css';
 
 import Navbar from './components/Navbar';
 import Home from './components/Home';
@@ -12,7 +10,7 @@ function App() {
 	return (
 		<Router>
 			<Navbar />
-			<div className='container-fluid py-3'>
+			<div className='max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8'>
 				<Routes>
 					<Route path='/' element={<Home />} />
 					<Route path='/students' element={<StudentList />} />
