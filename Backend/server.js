@@ -2,12 +2,21 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { connectToDatabase, closeConnection } = require('./config/db');
+const swaggerUI = require('swagger-ui-express');
+const swaggerSpecs = require('./swagger');
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Swagger documentation
+app.use('/api/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs));
+app.get('/api/swagger.json', (req, res) => {
+	res.setHeader('Content-Type', 'application/json');
+	res.send(swaggerSpecs);
+});
 
 // Routes
 const studentRoutes = require('./routes/students');
