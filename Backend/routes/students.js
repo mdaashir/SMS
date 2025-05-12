@@ -6,11 +6,11 @@ const Student = require('../models/student');
 router.post('/', async (req, res) => {
 	try {
 		const student = new Student(req.body);
-		await student.save();
-		res.status(201).json(student);
+		const savedStudent = await student.save();
+		res.status(201).json(savedStudent);
 	} catch (error) {
-		if (error.code === 11000) {
-			res.status(400).json({ message: 'Duplicate studentId or email' });
+		if (error.message && error.message.includes('Duplicate')) {
+			res.status(400).json({ message: error.message });
 		} else {
 			res.status(400).json({ message: error.message });
 		}
@@ -40,15 +40,18 @@ router.get('/program/:program', async (req, res) => {
 // Update student by studentId
 router.put('/:studentId', async (req, res) => {
 	try {
-		const student = await Student.findOneAndUpdate(
-			{ studentId: req.params.studentId },
-			req.body,
-			{ new: true, runValidators: true }
+		const studentId = req.params.studentId;
+
+		const updatedStudent = await Student.findOneAndUpdate(
+			{ studentId },
+			req.body
 		);
-		if (!student) {
+
+		if (!updatedStudent) {
 			return res.status(404).json({ message: 'Student not found' });
 		}
-		res.json(student);
+
+		res.json(updatedStudent);
 	} catch (error) {
 		res.status(400).json({ message: error.message });
 	}
@@ -57,12 +60,14 @@ router.put('/:studentId', async (req, res) => {
 // Delete student by studentId
 router.delete('/:studentId', async (req, res) => {
 	try {
-		const student = await Student.findOneAndDelete({
-			studentId: req.params.studentId,
-		});
-		if (!student) {
+		const studentId = req.params.studentId;
+
+		const deletedStudent = await Student.findOneAndDelete({ studentId });
+
+		if (!deletedStudent) {
 			return res.status(404).json({ message: 'Student not found' });
 		}
+
 		res.json({ message: 'Student deleted successfully' });
 	} catch (error) {
 		res.status(500).json({ message: error.message });
