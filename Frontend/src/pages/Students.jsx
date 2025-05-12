@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { useTheme } from '../components/ThemeContext';
+import { 
+  showSuccessToast, 
+  showErrorToast, 
+  showLoadingToast, 
+  updateToast 
+} from '../components/Toast';
 import {
   getAllStudents,
   deleteStudent,
@@ -8,6 +14,8 @@ import {
 } from '../services/StudentService';
 
 function Students() {
+  const { darkMode } = useTheme();
+  
   // State for student list
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +42,8 @@ function Students() {
 
   const fetchStudents = async () => {
     setLoading(true);
+    const loadingToastId = showLoadingToast('Loading students...');
+    
     try {
       const data = await getAllStudents();
       setStudents(data);
@@ -45,10 +55,21 @@ function Students() {
       setPrograms(uniquePrograms);
 
       setError(null);
+      updateToast(loadingToastId, { 
+        render: 'Students loaded successfully', 
+        type: 'success',
+        isLoading: false,
+        autoClose: 2000
+      });
     } catch (err) {
       setError(err.toString());
-      toast.error('Failed to fetch students');
       setStudents([]);
+      updateToast(loadingToastId, { 
+        render: 'Failed to fetch students', 
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000
+      });
     } finally {
       setLoading(false);
     }
@@ -56,13 +77,25 @@ function Students() {
 
   const handleDelete = async (studentId) => {
     if (window.confirm('Are you sure you want to delete this student?')) {
+      const loadingToastId = showLoadingToast('Deleting student...');
+      
       try {
         await deleteStudent(studentId);
-        toast.success('Student deleted successfully');
+        updateToast(loadingToastId, { 
+          render: 'Student deleted successfully', 
+          type: 'success',
+          isLoading: false,
+          autoClose: 2000
+        });
         await fetchStudents();
       } catch (err) {
         setError(err.toString());
-        toast.error('Failed to delete student');
+        updateToast(loadingToastId, { 
+          render: 'Failed to delete student', 
+          type: 'error',
+          isLoading: false,
+          autoClose: 3000
+        });
       }
     }
   };
@@ -72,21 +105,38 @@ function Students() {
     setProgram(selectedProgram);
 
     setLoading(true);
+    const loadingToastId = showLoadingToast('Filtering students...');
+    
     try {
       let data;
       if (selectedProgram) {
         data = await getStudentsByProgram(selectedProgram);
-        toast.success(`Filtered students by ${selectedProgram} program`);
+        updateToast(loadingToastId, { 
+          render: `Filtered students by ${selectedProgram} program`, 
+          type: 'success',
+          isLoading: false,
+          autoClose: 2000
+        });
       } else {
         data = await getAllStudents();
-        toast.success('Showing all students');
+        updateToast(loadingToastId, { 
+          render: 'Showing all students', 
+          type: 'success',
+          isLoading: false,
+          autoClose: 2000
+        });
       }
       setStudents(data);
       setError(null);
     } catch (err) {
       setError(err.toString());
-      toast.error('Failed to filter students');
       setStudents([]);
+      updateToast(loadingToastId, { 
+        render: 'Failed to filter students', 
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000
+      });
     } finally {
       setLoading(false);
     }
@@ -139,12 +189,13 @@ function Students() {
     const errors = validateForm();
     if (errors) {
       setFormError(errors);
-      toast.error('Please fix the form errors');
+      showErrorToast('Please fix the form errors');
       return;
     }
 
     setSubmitting(true);
     setFormError(null);
+    const loadingToastId = showLoadingToast('Adding student...');
 
     try {
       // Convert batchYear to number
@@ -154,7 +205,12 @@ function Students() {
       };
 
       await createStudent(studentData);
-      toast.success('Student added successfully');
+      updateToast(loadingToastId, { 
+        render: 'Student added successfully', 
+        type: 'success',
+        isLoading: false,
+        autoClose: 2000
+      });
       setShowAddForm(false);
       setFormData({
         studentId: '',
@@ -167,7 +223,12 @@ function Students() {
       await fetchStudents();
     } catch (error) {
       setFormError({ general: error.toString() });
-      toast.error('Failed to add student');
+      updateToast(loadingToastId, { 
+        render: 'Failed to add student', 
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000
+      });
     } finally {
       setSubmitting(false);
     }
@@ -182,17 +243,17 @@ function Students() {
   }
 
   if (error && !showAddForm) {
-    return <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded my-4'>Error: {error}</div>;
+    return <div className={`${darkMode ? 'bg-red-900 border-red-800 text-red-200' : 'bg-red-100 border-red-400 text-red-700'} px-4 py-3 rounded my-4 border`}>Error: {error}</div>;
   }
 
   return (
     <div className='mt-6'>
       {/* Header with title and actions */}
       <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6'>
-        <h2 className='text-2xl font-bold text-gray-800 mb-4 md:mb-0'>Student Management</h2>
+        <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4 md:mb-0`}>Student Management</h2>
         <div className='flex flex-col sm:flex-row gap-3 w-full md:w-auto'>
           <select
-            className='bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            className={`${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
             value={program}
             onChange={handleProgramChange}
             disabled={showAddForm}>
@@ -210,7 +271,9 @@ function Students() {
                 setFormError(null);
               }
             }}
-            className={`${showAddForm ? 'bg-gray-500' : 'bg-blue-600'} hover:${showAddForm ? 'bg-gray-600' : 'bg-blue-700'} text-white font-medium py-2 px-4 rounded transition duration-300`}>
+            className={`${showAddForm 
+              ? (darkMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600') 
+              : 'bg-blue-600 hover:bg-blue-700'} text-white font-medium py-2 px-4 rounded transition duration-300`}>
             {showAddForm ? 'Cancel' : 'Add New Student'}
           </button>
         </div>
@@ -218,22 +281,26 @@ function Students() {
 
       {/* Add Student Form */}
       {showAddForm ? (
-        <div className='bg-white shadow-md rounded-lg p-6 mb-8'>
-          <h3 className='text-xl font-bold text-gray-800 mb-4'>Add New Student</h3>
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-6 mb-8`}>
+          <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4`}>Add New Student</h3>
           
           {formError?.general && (
-            <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4'>{formError.general}</div>
+            <div className={`${darkMode ? 'bg-red-900 border-red-800 text-red-200' : 'bg-red-100 border-red-400 text-red-700'} px-4 py-3 rounded mb-4 border`}>{formError.general}</div>
           )}
 
           <form onSubmit={handleSubmit}>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <div>
-                <label htmlFor='studentId' className='block text-sm font-medium text-gray-700 mb-1'>
+                <label htmlFor='studentId' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Student ID *
                 </label>
                 <input
                   type='text'
-                  className={`w-full border ${formError?.studentId ? 'border-red-500' : 'border-gray-300'} rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  className={`w-full ${darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
+                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
+                    ${formError?.studentId ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
+                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
                   id='studentId'
                   name='studentId'
                   value={formData.studentId}
@@ -246,12 +313,16 @@ function Students() {
               </div>
 
               <div>
-                <label htmlFor='name' className='block text-sm font-medium text-gray-700 mb-1'>
+                <label htmlFor='name' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Name *
                 </label>
                 <input
                   type='text'
-                  className={`w-full border ${formError?.name ? 'border-red-500' : 'border-gray-300'} rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  className={`w-full ${darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
+                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
+                    ${formError?.name ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
+                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
                   id='name'
                   name='name'
                   value={formData.name}
@@ -264,12 +335,16 @@ function Students() {
               </div>
 
               <div>
-                <label htmlFor='email' className='block text-sm font-medium text-gray-700 mb-1'>
+                <label htmlFor='email' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Email *
                 </label>
                 <input
                   type='email'
-                  className={`w-full border ${formError?.email ? 'border-red-500' : 'border-gray-300'} rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  className={`w-full ${darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
+                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
+                    ${formError?.email ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
+                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
                   id='email'
                   name='email'
                   value={formData.email}
@@ -282,12 +357,16 @@ function Students() {
               </div>
 
               <div>
-                <label htmlFor='phone' className='block text-sm font-medium text-gray-700 mb-1'>
+                <label htmlFor='phone' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Phone *
                 </label>
                 <input
                   type='text'
-                  className={`w-full border ${formError?.phone ? 'border-red-500' : 'border-gray-300'} rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  className={`w-full ${darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
+                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
+                    ${formError?.phone ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
+                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
                   id='phone'
                   name='phone'
                   value={formData.phone}
@@ -300,12 +379,16 @@ function Students() {
               </div>
 
               <div>
-                <label htmlFor='program' className='block text-sm font-medium text-gray-700 mb-1'>
+                <label htmlFor='program' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Program *
                 </label>
                 <input
                   type='text'
-                  className={`w-full border ${formError?.program ? 'border-red-500' : 'border-gray-300'} rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  className={`w-full ${darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
+                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
+                    ${formError?.program ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
+                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
                   id='program'
                   name='program'
                   value={formData.program}
@@ -318,12 +401,16 @@ function Students() {
               </div>
 
               <div>
-                <label htmlFor='batchYear' className='block text-sm font-medium text-gray-700 mb-1'>
+                <label htmlFor='batchYear' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                   Batch Year *
                 </label>
                 <input
                   type='number'
-                  className={`w-full border ${formError?.batchYear ? 'border-red-500' : 'border-gray-300'} rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  className={`w-full ${darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
+                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
+                    ${formError?.batchYear ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
+                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
                   id='batchYear'
                   name='batchYear'
                   value={formData.batchYear}
@@ -341,9 +428,9 @@ function Students() {
                 type='button'
                 onClick={() => {
                   setShowAddForm(false);
-                  toast.info('Form cancelled');
+                  showSuccessToast('Form cancelled');
                 }}
-                className='bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded mr-2 transition duration-300'>
+                className={`${darkMode ? 'bg-gray-600 hover:bg-gray-700 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'} font-medium py-2 px-4 rounded mr-2 transition duration-300`}>
                 Cancel
               </button>
               <button
@@ -359,11 +446,11 @@ function Students() {
         // Student List
         <>
           {students.length === 0 ? (
-            <div className='bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 my-4'>No students found.</div>
+            <div className={`${darkMode ? 'bg-blue-900 border-blue-800 text-blue-200' : 'bg-blue-50 border-blue-500 text-blue-700'} p-4 my-4 border-l-4`}>No students found.</div>
           ) : (
             <div className='overflow-x-auto shadow-md rounded-lg'>
               <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-800 text-white'>
+                <thead className={`${darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-800 text-white'}`}>
                   <tr>
                     <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Student ID</th>
                     <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Name</th>
@@ -374,15 +461,15 @@ function Students() {
                     <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Actions</th>
                   </tr>
                 </thead>
-                <tbody className='bg-white divide-y divide-gray-200'>
+                <tbody className={`${darkMode ? 'bg-gray-700 divide-y divide-gray-600' : 'bg-white divide-y divide-gray-200'}`}>
                   {students.map((student) => (
-                    <tr key={student._id || student.studentId} className='hover:bg-gray-50'>
-                      <td className='px-6 py-4 whitespace-nowrap'>{student.studentId}</td>
-                      <td className='px-6 py-4 whitespace-nowrap'>{student.name}</td>
-                      <td className='px-6 py-4 whitespace-nowrap'>{student.email}</td>
-                      <td className='px-6 py-4 whitespace-nowrap'>{student.phone}</td>
-                      <td className='px-6 py-4 whitespace-nowrap'>{student.program}</td>
-                      <td className='px-6 py-4 whitespace-nowrap'>{student.batchYear}</td>
+                    <tr key={student._id || student.studentId} className={`${darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-50'}`}>
+                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.studentId}</td>
+                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.name}</td>
+                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.email}</td>
+                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.phone}</td>
+                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.program}</td>
+                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.batchYear}</td>
                       <td className='px-6 py-4 whitespace-nowrap'>
                         <button
                           className='bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded transition duration-300'
