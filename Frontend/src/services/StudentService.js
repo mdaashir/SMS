@@ -25,9 +25,11 @@ export const getAllStudents = async () => {
 // Get students by program
 export const getStudentsByProgram = async (program) => {
 	try {
-		const response = await axios.get(`${API_URL}/program/${program}`);
+		const encodedProgram = encodeURIComponent(program);
+		const response = await axios.get(`${API_URL}/program/${encodedProgram}`);
 		return response.data;
 	} catch (error) {
+		console.error('Error fetching students by program:', error);
 		throw error.response?.data?.message || 'Error fetching students by program';
 	}
 };
