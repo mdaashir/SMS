@@ -117,7 +117,13 @@ router.get('/', async (req, res) => {
 // Get students by program
 router.get('/program/:program', async (req, res) => {
 	try {
-		const students = await Student.find({ program: req.params.program });
+		const programRegex = new RegExp(req.params.program, 'i');
+		const students = await Student.find({ program: programRegex });
+
+		if (!students || students.length === 0) {
+			return res.json([]); // Return empty array instead of 404 for better frontend handling
+		}
+
 		res.json(students);
 	} catch (error) {
 		res.status(500).json({ message: error.message });
@@ -169,16 +175,29 @@ router.put('/:studentId', async (req, res) => {
 	try {
 		const studentId = req.params.studentId;
 
+		const existingStudent = await Student.findOne({ studentId });
+		if (!existingStudent) {
+			return res.status(404).json({ message: 'Student not found' });
+		}
+
+		if (
+			req.body.email &&
+			!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(req.body.email)
+		) {
+			return res.status(400).json({ message: 'Invalid email format' });
+		}
+
+		if (req.body.phone && !/^\+?[\d\s-]{10,}$/.test(req.body.phone)) {
+			return res.status(400).json({ message: 'Invalid phone number format' });
+		}
+
 		const updatedStudent = await Student.findOneAndUpdate(
 			{ studentId },
 			req.body
 		);
 
-		if (!updatedStudent) {
-			return res.status(404).json({ message: 'Student not found' });
-		}
-
-		res.json(updatedStudent);
+		const result = await Student.findOne({ studentId });
+		res.json(result);
 	} catch (error) {
 		res.status(400).json({ message: error.message });
 	}
@@ -223,11 +242,12 @@ router.delete('/:studentId', async (req, res) => {
 	try {
 		const studentId = req.params.studentId;
 
-		const deletedStudent = await Student.findOneAndDelete({ studentId });
-
-		if (!deletedStudent) {
+		const existingStudent = await Student.findOne({ studentId });
+		if (!existingStudent) {
 			return res.status(404).json({ message: 'Student not found' });
 		}
+
+		await Student.findOneAndDelete({ studentId });
 
 		res.json({ message: 'Student deleted successfully' });
 	} catch (error) {

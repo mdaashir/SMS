@@ -70,7 +70,6 @@ class Student {
 		const db = getDb();
 		return await db.collection('students').findOne(query);
 	}
-
 	// Update student
 	static async findOneAndUpdate(query, update) {
 		const db = getDb();
@@ -82,14 +81,14 @@ class Student {
 			.collection('students')
 			.findOneAndUpdate(query, { $set: update }, { returnDocument: 'after' });
 
-		return result.value;
+		return result;
 	}
 
 	// Delete student
 	static async findOneAndDelete(query) {
 		const db = getDb();
 		const result = await db.collection('students').findOneAndDelete(query);
-		return result.value;
+		return result;
 	}
 }
 
