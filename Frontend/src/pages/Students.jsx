@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   getAllStudents,
   deleteStudent,
@@ -46,6 +47,7 @@ function Students() {
       setError(null);
     } catch (err) {
       setError(err.toString());
+      toast.error('Failed to fetch students');
       setStudents([]);
     } finally {
       setLoading(false);
@@ -56,9 +58,11 @@ function Students() {
     if (window.confirm('Are you sure you want to delete this student?')) {
       try {
         await deleteStudent(studentId);
+        toast.success('Student deleted successfully');
         await fetchStudents();
       } catch (err) {
         setError(err.toString());
+        toast.error('Failed to delete student');
       }
     }
   };
@@ -72,13 +76,16 @@ function Students() {
       let data;
       if (selectedProgram) {
         data = await getStudentsByProgram(selectedProgram);
+        toast.success(`Filtered students by ${selectedProgram} program`);
       } else {
         data = await getAllStudents();
+        toast.success('Showing all students');
       }
       setStudents(data);
       setError(null);
     } catch (err) {
       setError(err.toString());
+      toast.error('Failed to filter students');
       setStudents([]);
     } finally {
       setLoading(false);
@@ -132,6 +139,7 @@ function Students() {
     const errors = validateForm();
     if (errors) {
       setFormError(errors);
+      toast.error('Please fix the form errors');
       return;
     }
 
@@ -146,6 +154,7 @@ function Students() {
       };
 
       await createStudent(studentData);
+      toast.success('Student added successfully');
       setShowAddForm(false);
       setFormData({
         studentId: '',
@@ -158,6 +167,7 @@ function Students() {
       await fetchStudents();
     } catch (error) {
       setFormError({ general: error.toString() });
+      toast.error('Failed to add student');
     } finally {
       setSubmitting(false);
     }
@@ -194,7 +204,12 @@ function Students() {
             ))}
           </select>
           <button 
-            onClick={() => setShowAddForm(!showAddForm)}
+            onClick={() => {
+              setShowAddForm(!showAddForm);
+              if (!showAddForm) {
+                setFormError(null);
+              }
+            }}
             className={`${showAddForm ? 'bg-gray-500' : 'bg-blue-600'} hover:${showAddForm ? 'bg-gray-600' : 'bg-blue-700'} text-white font-medium py-2 px-4 rounded transition duration-300`}>
             {showAddForm ? 'Cancel' : 'Add New Student'}
           </button>
@@ -324,7 +339,10 @@ function Students() {
             <div className='mt-6 flex justify-end'>
               <button
                 type='button'
-                onClick={() => setShowAddForm(false)}
+                onClick={() => {
+                  setShowAddForm(false);
+                  toast.info('Form cancelled');
+                }}
                 className='bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded mr-2 transition duration-300'>
                 Cancel
               </button>

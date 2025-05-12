@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 function Home() {
+	const handleStudentClick = () => {
+		toast.success('Navigating to Students page');
+	};
+
 	return (
 		<div className='max-w-4xl mx-auto mt-10 px-4 sm:px-6 lg:px-8'>
 			<div className='text-center'>
@@ -16,7 +21,10 @@ function Home() {
 					This system allows you to view and manage student information efficiently.
 				</p>
 				<div className='mt-8 flex flex-wrap justify-center gap-4'>
-					<Link to='/students' className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300'>
+					<Link 
+						to='/students' 
+						onClick={handleStudentClick}
+						className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300'>
 						View Students
 					</Link>
 				</div>
