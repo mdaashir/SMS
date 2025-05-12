@@ -21,9 +21,6 @@ function Navbar() {
 							<Link className='text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium' to='/students'>
 								Students
 							</Link>
-							<Link className='text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium' to='/add-student'>
-								Add Student
-							</Link>
 						</div>
 					</div>
 					<div className='md:hidden'>
@@ -50,9 +47,6 @@ function Navbar() {
 					</Link>
 					<Link className='text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium' to='/students'>
 						Students
-					</Link>
-					<Link className='text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium' to='/add-student'>
-						Add Student
 					</Link>
 				</div>
 			</div>
