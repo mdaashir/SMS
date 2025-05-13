@@ -7,6 +7,18 @@ const { connectToDatabase, closeConnection } = require('./config/db');
 const swaggerUI = require('swagger-ui-express');
 const swaggerSpecs = require('./swagger');
 
+const logger = {
+	info: (...args) => {
+		if (
+			process.env.NODE_ENV !== 'production' ||
+			process.env.LOG_LEVEL === 'info'
+		) {
+			console.log(new Date().toISOString(), '-', ...args);
+		}
+	},
+	error: (...args) => console.error(new Date().toISOString(), '-', ...args),
+};
+
 const app = express();
 
 // Security middleware
@@ -32,7 +44,7 @@ app.use(express.json());
 
 // Request logging middleware
 app.use((req, res, next) => {
-	console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+	logger.info(`${req.method} ${req.originalUrl}`);
 	next();
 });
 
@@ -76,7 +88,7 @@ app.use((req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-	console.error(`${new Date().toISOString()} - Error:`, err);
+	logger.error('Error:', err);
 
 	// Determine appropriate status code
 	const statusCode = err.statusCode || 500;
@@ -97,14 +109,14 @@ async function startServer() {
 		await connectToDatabase();
 
 		app.listen(PORT, '0.0.0.0', () => {
-			console.log(
+			logger.info(
 				`Server is running on port ${PORT} in ${
 					process.env.NODE_ENV || 'development'
 				} mode`
 			);
 		});
 	} catch (error) {
-		console.error('Failed to start server:', error);
+		logger.error('Failed to start server:', error);
 		process.exit(1);
 	}
 }
@@ -119,14 +131,14 @@ process.on('SIGINT', async () => {
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-	console.error('Uncaught Exception:', error);
+	logger.error('Uncaught Exception:', error);
 	closeConnection();
 	process.exit(1);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-	console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+	logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
 	closeConnection();
 	process.exit(1);
 });

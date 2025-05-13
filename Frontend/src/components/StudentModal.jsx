@@ -35,7 +35,7 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
       ...formData,
       [name]: value
     });
-    
+
     // Clear error for this field if it exists
     if (errors[name]) {
       setErrors({
@@ -47,7 +47,7 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
 
   const validate = () => {
     const newErrors = {};
-    
+
     // Check each field
     if (!formData.studentId && !student) newErrors.studentId = 'Student ID is required';
     if (!formData.name) newErrors.name = 'Name is required';
@@ -55,21 +55,30 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
     if (!formData.phone) newErrors.phone = 'Phone number is required';
     if (!formData.program) newErrors.program = 'Program is required';
     if (!formData.batchYear) newErrors.batchYear = 'Batch year is required';
-    
+
     // Email validation
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (validate()) {
-      onSubmit(formData);
+      const cleanFormData = {
+        studentId: formData.studentId,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        program: formData.program,
+        batchYear: formData.batchYear
+      };
+
+      onSubmit(cleanFormData);
     }
   };
 
@@ -80,7 +89,7 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
           <h2 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
             {student ? 'Edit Student' : 'Add New Student'}
           </h2>
-          <button 
+          <button
             onClick={onClose}
             className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
             aria-label="Close"
@@ -104,10 +113,10 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               onChange={handleChange}
               disabled={!!student}
               className={`w-full px-4 py-2.5 border rounded-lg ${
-                errors.studentId 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : darkMode 
-                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white' 
+                errors.studentId
+                  ? 'border-red-500 focus:ring-red-500'
+                  : darkMode
+                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white'
                     : 'border-gray-300 focus:ring-blue-500'
               } focus:border-transparent focus:outline-none focus:ring-2 transition-all ${student ? (darkMode ? 'bg-gray-600' : 'bg-gray-100') : ''}`}
               placeholder="Enter student ID"
@@ -128,10 +137,10 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               value={formData.name}
               onChange={handleChange}
               className={`w-full px-4 py-2.5 border rounded-lg ${
-                errors.name 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : darkMode 
-                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white' 
+                errors.name
+                  ? 'border-red-500 focus:ring-red-500'
+                  : darkMode
+                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white'
                     : 'border-gray-300 focus:ring-blue-500'
               } focus:border-transparent focus:outline-none focus:ring-2 transition-all`}
               placeholder="Enter full name"
@@ -152,10 +161,10 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               value={formData.email}
               onChange={handleChange}
               className={`w-full px-4 py-2.5 border rounded-lg ${
-                errors.email 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : darkMode 
-                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white' 
+                errors.email
+                  ? 'border-red-500 focus:ring-red-500'
+                  : darkMode
+                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white'
                     : 'border-gray-300 focus:ring-blue-500'
               } focus:border-transparent focus:outline-none focus:ring-2 transition-all`}
               placeholder="Enter email address"
@@ -176,10 +185,10 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               value={formData.phone}
               onChange={handleChange}
               className={`w-full px-4 py-2.5 border rounded-lg ${
-                errors.phone 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : darkMode 
-                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white' 
+                errors.phone
+                  ? 'border-red-500 focus:ring-red-500'
+                  : darkMode
+                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white'
                     : 'border-gray-300 focus:ring-blue-500'
               } focus:border-transparent focus:outline-none focus:ring-2 transition-all`}
               placeholder="Enter phone number"
@@ -199,10 +208,10 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               value={formData.program}
               onChange={handleChange}
               className={`w-full px-4 py-2.5 border rounded-lg ${
-                errors.program 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : darkMode 
-                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white' 
+                errors.program
+                  ? 'border-red-500 focus:ring-red-500'
+                  : darkMode
+                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white'
                     : 'border-gray-300 focus:ring-blue-500'
               } focus:border-transparent focus:outline-none focus:ring-2 transition-all`}
             >
@@ -229,10 +238,10 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               value={formData.batchYear}
               onChange={handleChange}
               className={`w-full px-4 py-2.5 border rounded-lg ${
-                errors.batchYear 
-                  ? 'border-red-500 focus:ring-red-500' 
-                  : darkMode 
-                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white' 
+                errors.batchYear
+                  ? 'border-red-500 focus:ring-red-500'
+                  : darkMode
+                    ? 'border-gray-600 focus:ring-blue-500 bg-gray-700 text-white'
                     : 'border-gray-300 focus:ring-blue-500'
               } focus:border-transparent focus:outline-none focus:ring-2 transition-all`}
             >
@@ -253,8 +262,8 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               type="button"
               onClick={onClose}
               className={`px-5 py-2.5 text-sm font-medium ${
-                darkMode 
-                  ? 'text-gray-300 bg-gray-700 hover:bg-gray-600' 
+                darkMode
+                  ? 'text-gray-300 bg-gray-700 hover:bg-gray-600'
                   : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
               } rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all`}
             >
@@ -263,8 +272,8 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
             <button
               type="submit"
               className={`px-5 py-2.5 text-sm font-medium text-white ${
-                darkMode 
-                  ? 'bg-blue-700 hover:bg-blue-800' 
+                darkMode
+                  ? 'bg-blue-700 hover:bg-blue-800'
                   : 'bg-blue-600 hover:bg-blue-700'
               } rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all flex items-center`}
             >
@@ -280,4 +289,4 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
   );
 };
 
-export default StudentModal; 
+export default StudentModal;
