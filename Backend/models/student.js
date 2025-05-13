@@ -5,11 +5,23 @@ class Student {
 		this.studentId = student.studentId;
 		this.name = student.name;
 		this.email = student.email;
-		this.phone = student.phone;
+		this.phone = this.formatPhoneNumber(student.phone);
 		this.program = student.program;
 		this.batchYear = student.batchYear;
 		this.createdAt = new Date();
 		this.updatedAt = new Date();
+	}
+
+	formatPhoneNumber(phone) {
+		if (!phone) return phone;
+
+		// If the phone number doesn't start with +, add +91
+		if (!phone.startsWith('+')) {
+			const cleanNumber = phone.replace(/^0+/, '');
+			return `+91${cleanNumber}`;
+		}
+
+		return phone;
 	}
 
 	// Validate student data
@@ -32,8 +44,14 @@ class Student {
 		// Phone validation
 		if (!this.phone) {
 			errors.push('Phone is required');
-		} else if (!/^\+?[\d\s-]{10,}$/.test(this.phone)) {
-			errors.push(`${this.phone} is not a valid phone number!`);
+		} else {
+
+			const phoneDigits = this.phone.replace(/\D/g, '');
+			if (phoneDigits.length < 10) {
+				errors.push(
+					`${this.phone} is not a valid phone number - must have at least 10 digits`
+				);
+			}
 		}
 
 		return errors;
@@ -60,16 +78,40 @@ class Student {
 	}
 
 	// Find all students
-	static async find(query = {}) {
+	static async find(query = {}, options = {}) {
 		const db = getDb();
-		return await db.collection('students').find(query).toArray();
+		try {
+
+			let cursor = db.collection('students').find(query);
+
+			if (options.skip !== undefined) {
+				cursor = cursor.skip(options.skip);
+			}
+
+			// Apply limit if provided
+			if (options.limit !== undefined) {
+				cursor = cursor.limit(options.limit);
+			}
+
+			// Apply sort if provided
+			if (options.sort) {
+				cursor = cursor.sort(options.sort);
+			}
+
+			const results = await cursor.toArray();
+			return results;
+		} catch (error) {
+			console.error('Error in Student.find:', error);
+			return [];
+		}
 	}
 
 	// Find one student by query
 	static async findOne(query) {
 		const db = getDb();
 		return await db.collection('students').findOne(query);
-	}
+    }
+
 	// Update student
 	static async findOneAndUpdate(query, update) {
 		const db = getDb();
@@ -77,11 +119,24 @@ class Student {
 		// Add updatedAt field
 		update.updatedAt = new Date();
 
-		const result = await db
-			.collection('students')
-			.findOneAndUpdate(query, { $set: update }, { returnDocument: 'after' });
+		delete update._id;
+		delete update.studentId;
 
-		return result;
+		try {
+			const result = await db.collection('students').findOneAndUpdate(
+				query,
+				{ $set: update },
+				{
+					returnDocument: 'after',
+					upsert: false, // Don't create if doesn't exist
+				}
+			);
+
+			return result;
+		} catch (error) {
+			console.error('Error in findOneAndUpdate:', error);
+			throw error;
+		}
 	}
 
 	// Delete student
@@ -89,6 +144,16 @@ class Student {
 		const db = getDb();
 		const result = await db.collection('students').findOneAndDelete(query);
 		return result;
+	}
+
+	static async countDocuments(query = {}) {
+		const db = getDb();
+		try {
+			return await db.collection('students').countDocuments(query);
+		} catch (error) {
+			console.error('Error counting documents:', error);
+			return 0;
+		}
 	}
 }
 

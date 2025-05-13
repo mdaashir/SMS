@@ -66,7 +66,7 @@ async function connectToDatabase() {
 
 			// Wait before retrying
 			const delay = Math.min(1000 * Math.pow(2, retries), 10000);
-			await new Promise(resolve => setTimeout(resolve, delay));
+			await new Promise((resolve) => setTimeout(resolve, delay));
 		}
 	}
 
