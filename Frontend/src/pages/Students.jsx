@@ -1,44 +1,79 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../components/ThemeContext';
+import StudentTable from '../components/StudentTable';
+import StudentModal from '../components/StudentModal';
+import ConfirmationDialog from '../components/ConfirmationDialog';
 import { 
   showSuccessToast, 
   showErrorToast, 
   showLoadingToast, 
+  dismissToast,
   updateToast 
 } from '../components/Toast';
 import {
   getAllStudents,
   deleteStudent,
   getStudentsByProgram,
-  createStudent
+  createStudent,
+  updateStudent
 } from '../services/StudentService';
 
-function Students() {
+const Students = () => {
   const { darkMode } = useTheme();
   
-  // State for student list
+  // State for student list and filtering
   const [students, setStudents] = useState([]);
+  const [filteredStudents, setFilteredStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [program, setProgram] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterProgram, setFilterProgram] = useState('');
+  const [filterBatchYear, setFilterBatchYear] = useState('');
   const [programs, setPrograms] = useState([]);
-  
-  // State for add student form
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({
-    studentId: '',
-    name: '',
-    email: '',
-    phone: '',
-    program: '',
-    batchYear: '',
-  });
-  const [formError, setFormError] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [batchYears, setBatchYears] = useState([]);
 
+  // State for modal and confirmation dialog
+  const [showModal, setShowModal] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+
+  // Load students on component mount
   useEffect(() => {
     fetchStudents();
   }, []);
+
+  // Filter students when search term or filters change
+  useEffect(() => {
+    if (students.length === 0) {
+      setFilteredStudents([]);
+      return;
+    }
+    
+    let result = students;
+    
+    // Apply search filter
+    if (searchTerm) {
+      const searchTermLower = searchTerm.toLowerCase();
+      result = result.filter(student => 
+        student.studentId.toLowerCase().includes(searchTermLower) ||
+        student.name.toLowerCase().includes(searchTermLower) ||
+        student.email.toLowerCase().includes(searchTermLower) ||
+        student.phone.toLowerCase().includes(searchTermLower)
+      );
+    }
+    
+    // Apply program filter
+    if (filterProgram) {
+      result = result.filter(student => student.program === filterProgram);
+    }
+    
+    // Apply batch year filter
+    if (filterBatchYear) {
+      result = result.filter(student => student.batchYear === filterBatchYear);
+    }
+    
+    setFilteredStudents(result);
+  }, [students, searchTerm, filterProgram, filterBatchYear]);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -47,446 +82,236 @@ function Students() {
     try {
       const data = await getAllStudents();
       setStudents(data);
+      setFilteredStudents(data);
 
-      // Extract unique programs for filter dropdown
-      const uniquePrograms = [
-        ...new Set(data.map((student) => student.program)),
-      ];
-      setPrograms(uniquePrograms);
-
-      setError(null);
-      updateToast(loadingToastId, { 
-        render: 'Students loaded successfully', 
-        type: 'success',
-        isLoading: false,
-        autoClose: 2000
-      });
-    } catch (err) {
-      setError(err.toString());
-      setStudents([]);
-      updateToast(loadingToastId, { 
-        render: 'Failed to fetch students', 
-        type: 'error',
-        isLoading: false,
-        autoClose: 3000
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (studentId) => {
-    if (window.confirm('Are you sure you want to delete this student?')) {
-      const loadingToastId = showLoadingToast('Deleting student...');
+      // Extract unique programs and batch years for filters
+      const uniquePrograms = [...new Set(data.map(student => student.program))].sort();
+      const uniqueBatchYears = [...new Set(data.map(student => student.batchYear))].sort();
       
-      try {
-        await deleteStudent(studentId);
-        updateToast(loadingToastId, { 
-          render: 'Student deleted successfully', 
-          type: 'success',
-          isLoading: false,
-          autoClose: 2000
-        });
-        await fetchStudents();
-      } catch (err) {
-        setError(err.toString());
-        updateToast(loadingToastId, { 
-          render: 'Failed to delete student', 
-          type: 'error',
-          isLoading: false,
-          autoClose: 3000
-        });
-      }
-    }
-  };
-
-  const handleProgramChange = async (e) => {
-    const selectedProgram = e.target.value;
-    setProgram(selectedProgram);
-
-    setLoading(true);
-    const loadingToastId = showLoadingToast('Filtering students...');
-    
-    try {
-      let data;
-      if (selectedProgram) {
-        data = await getStudentsByProgram(selectedProgram);
-        updateToast(loadingToastId, { 
-          render: `Filtered students by ${selectedProgram} program`, 
-          type: 'success',
-          isLoading: false,
-          autoClose: 2000
-        });
-      } else {
-        data = await getAllStudents();
-        updateToast(loadingToastId, { 
-          render: 'Showing all students', 
-          type: 'success',
-          isLoading: false,
-          autoClose: 2000
-        });
-      }
-      setStudents(data);
-      setError(null);
-    } catch (err) {
-      setError(err.toString());
+      setPrograms(uniquePrograms);
+      setBatchYears(uniqueBatchYears);
+      
+      dismissToast(loadingToastId);
+      showSuccessToast('Students loaded successfully');
+    } catch (error) {
+      dismissToast(loadingToastId);
+      showErrorToast('Failed to load students');
+      console.error('Error fetching students:', error);
       setStudents([]);
-      updateToast(loadingToastId, { 
-        render: 'Failed to filter students', 
-        type: 'error',
-        isLoading: false,
-        autoClose: 3000
-      });
+      setFilteredStudents([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Form handling
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  const handleAddStudent = () => {
+    setSelectedStudent(null);
+    setShowModal(true);
   };
 
-  const validateForm = () => {
-    const errors = {};
-
-    if (!formData.studentId.trim()) errors.studentId = 'Student ID is required';
-    if (!formData.name.trim()) errors.name = 'Name is required';
-
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) {
-      errors.email = 'Invalid email format';
-    }
-
-    if (!formData.phone.trim()) {
-      errors.phone = 'Phone is required';
-    } else if (!/^\+?[\d\s-]{10,}$/.test(formData.phone)) {
-      errors.phone = 'Invalid phone format';
-    }
-
-    if (!formData.program.trim()) errors.program = 'Program is required';
-
-    if (!formData.batchYear) {
-      errors.batchYear = 'Batch Year is required';
-    } else if (
-      isNaN(formData.batchYear) ||
-      parseInt(formData.batchYear) < 2000
-    ) {
-      errors.batchYear = 'Invalid batch year';
-    }
-
-    return Object.keys(errors).length === 0 ? null : errors;
+  const handleEditStudent = (student) => {
+    setSelectedStudent(student);
+    setShowModal(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleDeleteClick = (student) => {
+    setStudentToDelete(student);
+    setShowConfirmation(true);
+  };
 
-    const errors = validateForm();
-    if (errors) {
-      setFormError(errors);
-      showErrorToast('Please fix the form errors');
-      return;
-    }
-
-    setSubmitting(true);
-    setFormError(null);
-    const loadingToastId = showLoadingToast('Adding student...');
-
+  const handleDeleteConfirm = async () => {
     try {
-      // Convert batchYear to number
-      const studentData = {
-        ...formData,
-        batchYear: parseInt(formData.batchYear),
-      };
-
-      await createStudent(studentData);
-      updateToast(loadingToastId, { 
-        render: 'Student added successfully', 
-        type: 'success',
-        isLoading: false,
-        autoClose: 2000
-      });
-      setShowAddForm(false);
-      setFormData({
-        studentId: '',
-        name: '',
-        email: '',
-        phone: '',
-        program: '',
-        batchYear: '',
-      });
+      const loadingToastId = showLoadingToast('Deleting student...');
+      await deleteStudent(studentToDelete._id);
+      dismissToast(loadingToastId);
+      showSuccessToast('Student deleted successfully');
       await fetchStudents();
     } catch (error) {
-      setFormError({ general: error.toString() });
-      updateToast(loadingToastId, { 
-        render: 'Failed to add student', 
-        type: 'error',
-        isLoading: false,
-        autoClose: 3000
-      });
+      showErrorToast('Error deleting student');
+      console.error('Error deleting student:', error);
     } finally {
-      setSubmitting(false);
+      setShowConfirmation(false);
+      setStudentToDelete(null);
     }
   };
 
-  if (loading) {
-    return (
-      <div className='flex justify-center items-center my-12'>
-        <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500'></div>
-      </div>
-    );
-  }
+  const handleFormSubmit = async (formData) => {
+    try {
+      const isEdit = !!selectedStudent;
+      const loadingToastId = showLoadingToast(isEdit ? 'Updating student...' : 'Adding student...');
+      
+      if (isEdit) {
+        // Update existing student
+        await updateStudent(selectedStudent._id, formData);
+        dismissToast(loadingToastId);
+        showSuccessToast('Student updated successfully');
+      } else {
+        // Add new student
+        await createStudent(formData);
+        dismissToast(loadingToastId);
+        showSuccessToast('Student added successfully');
+      }
+      
+      setShowModal(false);
+      await fetchStudents();
+    } catch (error) {
+      showErrorToast(`Error ${selectedStudent ? 'updating' : 'adding'} student`);
+      console.error('Error saving student:', error);
+    }
+  };
 
-  if (error && !showAddForm) {
-    return <div className={`${darkMode ? 'bg-red-900 border-red-800 text-red-200' : 'bg-red-100 border-red-400 text-red-700'} px-4 py-3 rounded my-4 border`}>Error: {error}</div>;
-  }
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilterProgram('');
+    setFilterBatchYear('');
+  };
 
   return (
-    <div className='mt-6'>
-      {/* Header with title and actions */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6'>
-        <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4 md:mb-0`}>Student Management</h2>
-        <div className='flex flex-col sm:flex-row gap-3 w-full md:w-auto'>
-          <select
-            className={`${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} border rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-            value={program}
-            onChange={handleProgramChange}
-            disabled={showAddForm}>
-            <option value=''>All Programs</option>
-            {programs.map((prog) => (
-              <option key={prog} value={prog}>
-                {prog}
-              </option>
-            ))}
-          </select>
-          <button 
-            onClick={() => {
-              setShowAddForm(!showAddForm);
-              if (!showAddForm) {
-                setFormError(null);
-              }
-            }}
-            className={`${showAddForm 
-              ? (darkMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600') 
-              : 'bg-blue-600 hover:bg-blue-700'} text-white font-medium py-2 px-4 rounded transition duration-300`}>
-            {showAddForm ? 'Cancel' : 'Add New Student'}
-          </button>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className={`text-3xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'} transition-colors duration-200`}>Student Management</h1>
+        <button 
+          onClick={handleAddStudent}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-md transition-all duration-200 transform hover:scale-105 flex items-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          Add Student
+        </button>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-4 mb-6 transition-colors duration-200`}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Search Input */}
+          <div className="col-span-1 md:col-span-2">
+            <label htmlFor="search" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+              Search
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                id="search"
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by ID, name, email, or phone"
+                className={`block w-full pl-10 pr-4 py-2 border ${
+                  darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
+              />
+            </div>
+          </div>
+
+          {/* Program Filter */}
+          <div>
+            <label htmlFor="program-filter" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+              Program
+            </label>
+            <select
+              id="program-filter"
+              value={filterProgram}
+              onChange={(e) => setFilterProgram(e.target.value)}
+              className={`block w-full py-2 px-3 border ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
+            >
+              <option value="">All Programs</option>
+              {programs.map((program) => (
+                <option key={program} value={program}>
+                  {program}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Batch Year Filter */}
+          <div>
+            <label htmlFor="batch-filter" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+              Batch Year
+            </label>
+            <div className="flex space-x-2">
+              <select
+                id="batch-filter"
+                value={filterBatchYear}
+                onChange={(e) => setFilterBatchYear(e.target.value)}
+                className={`block w-full py-2 px-3 border ${
+                  darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200`}
+              >
+                <option value="">All Years</option>
+                {batchYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+              
+              {(searchTerm || filterProgram || filterBatchYear) && (
+                <button
+                  onClick={handleClearFilters}
+                  className={`flex items-center px-3 py-2 border ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                  } rounded-md transition-colors duration-200`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Add Student Form */}
-      {showAddForm ? (
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-6 mb-8`}>
-          <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4`}>Add New Student</h3>
-          
-          {formError?.general && (
-            <div className={`${darkMode ? 'bg-red-900 border-red-800 text-red-200' : 'bg-red-100 border-red-400 text-red-700'} px-4 py-3 rounded mb-4 border`}>{formError.general}</div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-              <div>
-                <label htmlFor='studentId' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Student ID *
-                </label>
-                <input
-                  type='text'
-                  className={`w-full ${darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
-                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
-                    ${formError?.studentId ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
-                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
-                  id='studentId'
-                  name='studentId'
-                  value={formData.studentId}
-                  onChange={handleChange}
-                  placeholder='Enter student ID'
-                />
-                {formError?.studentId && (
-                  <p className='text-red-500 text-xs mt-1'>{formError.studentId}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor='name' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Name *
-                </label>
-                <input
-                  type='text'
-                  className={`w-full ${darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
-                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
-                    ${formError?.name ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
-                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
-                  id='name'
-                  name='name'
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder='Enter full name'
-                />
-                {formError?.name && (
-                  <p className='text-red-500 text-xs mt-1'>{formError.name}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor='email' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Email *
-                </label>
-                <input
-                  type='email'
-                  className={`w-full ${darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
-                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
-                    ${formError?.email ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
-                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
-                  id='email'
-                  name='email'
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder='Enter email address'
-                />
-                {formError?.email && (
-                  <p className='text-red-500 text-xs mt-1'>{formError.email}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor='phone' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Phone *
-                </label>
-                <input
-                  type='text'
-                  className={`w-full ${darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
-                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
-                    ${formError?.phone ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
-                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
-                  id='phone'
-                  name='phone'
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder='Enter phone number'
-                />
-                {formError?.phone && (
-                  <p className='text-red-500 text-xs mt-1'>{formError.phone}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor='program' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Program *
-                </label>
-                <input
-                  type='text'
-                  className={`w-full ${darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
-                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
-                    ${formError?.program ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
-                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
-                  id='program'
-                  name='program'
-                  value={formData.program}
-                  onChange={handleChange}
-                  placeholder='Enter program name'
-                />
-                {formError?.program && (
-                  <p className='text-red-500 text-xs mt-1'>{formError.program}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor='batchYear' className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Batch Year *
-                </label>
-                <input
-                  type='number'
-                  className={`w-full ${darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white focus:ring-blue-500 focus:border-blue-500' 
-                    : 'bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500'} 
-                    ${formError?.batchYear ? (darkMode ? 'border-red-500' : 'border-red-500') : ''} 
-                    border rounded-md py-2 px-3 focus:outline-none focus:ring-2`}
-                  id='batchYear'
-                  name='batchYear'
-                  value={formData.batchYear}
-                  onChange={handleChange}
-                  placeholder='Enter batch year'
-                />
-                {formError?.batchYear && (
-                  <p className='text-red-500 text-xs mt-1'>{formError.batchYear}</p>
-                )}
-              </div>
-            </div>
-
-            <div className='mt-6 flex justify-end'>
-              <button
-                type='button'
-                onClick={() => {
-                  setShowAddForm(false);
-                  showSuccessToast('Form cancelled');
-                }}
-                className={`${darkMode ? 'bg-gray-600 hover:bg-gray-700 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'} font-medium py-2 px-4 rounded mr-2 transition duration-300`}>
-                Cancel
-              </button>
-              <button
-                type='submit'
-                disabled={submitting}
-                className='bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition duration-300 disabled:opacity-50'>
-                {submitting ? 'Saving...' : 'Save Student'}
-              </button>
-            </div>
-          </form>
+      {/* Students Table */}
+      {loading ? (
+        <div className={`flex justify-center items-center py-20 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="text-xl font-medium">Loading students...</span>
         </div>
       ) : (
-        // Student List
-        <>
-          {students.length === 0 ? (
-            <div className={`${darkMode ? 'bg-blue-900 border-blue-800 text-blue-200' : 'bg-blue-50 border-blue-500 text-blue-700'} p-4 my-4 border-l-4`}>No students found.</div>
-          ) : (
-            <div className='overflow-x-auto shadow-md rounded-lg'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className={`${darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-800 text-white'}`}>
-                  <tr>
-                    <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Student ID</th>
-                    <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Name</th>
-                    <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Email</th>
-                    <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Phone</th>
-                    <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Program</th>
-                    <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Batch Year</th>
-                    <th scope='col' className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>Actions</th>
-                  </tr>
-                </thead>
-                <tbody className={`${darkMode ? 'bg-gray-700 divide-y divide-gray-600' : 'bg-white divide-y divide-gray-200'}`}>
-                  {students.map((student) => (
-                    <tr key={student._id || student.studentId} className={`${darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-50'}`}>
-                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.studentId}</td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.name}</td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.email}</td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.phone}</td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.program}</td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : ''}`}>{student.batchYear}</td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <button
-                          className='bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded transition duration-300'
-                          onClick={() => handleDelete(student.studentId)}>
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
+        <StudentTable 
+          students={filteredStudents} 
+          onEdit={handleEditStudent} 
+          onDelete={handleDeleteClick} 
+        />
       )}
+
+      {/* Student Modal */}
+      <StudentModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleFormSubmit}
+        student={selectedStudent}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        show={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Student"
+        message={`Are you sure you want to delete ${studentToDelete?.name}? This action cannot be undone.`}
+      />
     </div>
   );
-}
+};
 
 export default Students; 

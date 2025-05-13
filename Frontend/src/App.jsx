@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useTheme } from './components/ThemeContext';
 import { ToastContainer } from './components/Toast';
@@ -6,7 +7,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Students from './pages/Students';
 
-function App() {
+const App = () => {
 	const { darkMode } = useTheme();
 	
 	return (
@@ -32,6 +33,6 @@ function App() {
 			</div>
 		</Router>
 	);
-}
+};
 
 export default App;
