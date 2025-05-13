@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
+const helmet = require('helmet');
 require('dotenv').config();
 const { connectToDatabase, closeConnection } = require('./config/db');
 const swaggerUI = require('swagger-ui-express');
@@ -7,9 +9,32 @@ const swaggerSpecs = require('./swagger');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Security middleware
+app.use(helmet());
+
+// CORS configuration
+app.use(
+	cors({
+		origin:
+			process.env.NODE_ENV === 'production'
+				? process.env.ALLOWED_ORIGINS?.split(',') || '*'
+				: '*',
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+		allowedHeaders: ['Content-Type', 'Authorization'],
+	})
+);
+
+// Compression middleware
+app.use(compression());
+
+// Parse JSON bodies
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+	console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+	next();
+});
 
 // Swagger documentation
 app.use('/api/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs));
@@ -19,18 +44,49 @@ app.get('/api/swagger.json', (req, res) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-	res.status(200).json({ status: 'ok', service: 'student-management-api' });
+app.get('/health', async (req, res) => {
+	try {
+		const db = require('./config/db').getDb();
+		const dbStatus = await db.ping();
+
+		res.status(200).json({
+			status: 'ok',
+			service: 'student-management-api',
+			database: dbStatus ? 'connected' : 'disconnected',
+			timestamp: new Date().toISOString(),
+		});
+	} catch (error) {
+		res.status(500).json({
+			status: 'error',
+			service: 'student-management-api',
+			database: 'disconnected',
+			error: error.message,
+		});
+	}
 });
 
 // Routes
 const studentRoutes = require('./routes/students');
 app.use('/api/students', studentRoutes);
 
+// 404 handler
+app.use((req, res) => {
+	res.status(404).json({ message: 'Resource not found' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-	console.error(err.stack);
-	res.status(500).json({ message: 'Something went wrong!' });
+	console.error(`${new Date().toISOString()} - Error:`, err);
+
+	// Determine appropriate status code
+	const statusCode = err.statusCode || 500;
+
+	// Send error response
+	res.status(statusCode).json({
+		message: err.message || 'Something went wrong!',
+		status: 'error',
+		...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
+	});
 });
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
@@ -41,7 +97,11 @@ async function startServer() {
 		await connectToDatabase();
 
 		app.listen(PORT, '0.0.0.0', () => {
-			console.log(`Server is running on port ${PORT}`);
+			console.log(
+				`Server is running on port ${PORT} in ${
+					process.env.NODE_ENV || 'development'
+				} mode`
+			);
 		});
 	} catch (error) {
 		console.error('Failed to start server:', error);
@@ -55,4 +115,18 @@ startServer();
 process.on('SIGINT', async () => {
 	closeConnection();
 	process.exit(0);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+	console.error('Uncaught Exception:', error);
+	closeConnection();
+	process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+	console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+	closeConnection();
+	process.exit(1);
 });

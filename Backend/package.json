@@ -16,9 +16,11 @@
 	"license": "MIT",
 	"description": "Backend for SMS application",
 	"dependencies": {
+		"compression": "^1.7.4",
 		"cors": "^2.8.5",
 		"dotenv": "^16.5.0",
 		"express": "^5.1.0",
+		"helmet": "^7.1.0",
 		"mongodb": "^6.16.0",
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1"
