@@ -14,9 +14,9 @@ const App = () => {
 
 	return (
 		<Router>
-			<div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'} transition-colors duration-200`}>
+			<div className={`flex flex-col min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'} transition-colors duration-200`}>
 				<Navbar />
-				<main className="pt-4 pb-8">
+				<main className="pt-4 pb-8 flex-grow">
 					<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 						<ErrorBoundary>
 							<Suspense>

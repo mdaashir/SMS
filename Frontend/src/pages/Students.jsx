@@ -9,7 +9,9 @@ import {
   showErrorToast,
   showLoadingToast,
   dismissToast,
-  updateToast
+  updateToast,
+  showStudentDeletedToast,
+  showStudentUpdatedToast
 } from '../components/Toast';
 import {
   getAllStudents,
@@ -59,7 +61,6 @@ const Students = () => {
   const fetchPaginatedStudents = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const loadingToastId = showLoadingToast('Loading students...');
 
     try {
       // Prepare filters for API
@@ -94,11 +95,7 @@ const Students = () => {
           showErrorToast('Failed to load filter data');
         }
       }
-
-      dismissToast(loadingToastId);
-      showSuccessToast('Students loaded successfully');
     } catch (error) {
-      dismissToast(loadingToastId);
       const errorMessage = error.message || 'Failed to load students';
       showErrorToast(errorMessage);
       console.error('Error fetching students:', error);
@@ -167,10 +164,8 @@ const Students = () => {
     }
 
     try {
-      const loadingToastId = showLoadingToast('Deleting student...');
       await deleteStudent(studentToDelete.studentId);
-      dismissToast(loadingToastId);
-      showSuccessToast('Student deleted successfully');
+      showStudentDeletedToast('Student deleted successfully');
       await fetchPaginatedStudents();
     } catch (error) {
       const errorMessage = error.message || 'Error deleting student';
@@ -189,7 +184,6 @@ const Students = () => {
 
     try {
       const isEdit = !!selectedStudent;
-      const loadingToastId = showLoadingToast(isEdit ? 'Updating student...' : 'Adding student...');
 
       if (isEdit) {
         if (!selectedStudent.studentId) {
@@ -197,12 +191,10 @@ const Students = () => {
         }
         // Update existing student
         await updateStudent(selectedStudent.studentId, formData);
-        dismissToast(loadingToastId);
-        showSuccessToast('Student updated successfully');
+        showStudentUpdatedToast('Student updated successfully');
       } else {
         // Add new student
         await createStudent(formData);
-        dismissToast(loadingToastId);
         showSuccessToast('Student added successfully');
       }
 

@@ -10,7 +10,7 @@ export const ToastContainer = () => {
 		<Toaster
 			position='top-right'
 			toastOptions={{
-				duration: 5000,
+				duration: 2000,
 				style: {
 					borderRadius: '8px',
 					background: darkMode ? '#374151' : '#fff', // gray-700 for dark mode
@@ -105,6 +105,38 @@ export const showErrorToast = (message) => {
 // Function to show loading toast
 export const showLoadingToast = (message) => {
 	return toast.loading(message);
+};
+
+export const showStudentDeletedToast = (message) => {
+	return toast.success(message, {
+		style: {
+			border: '1px solid #dc2626',
+			backgroundColor: '#b91c1c',
+			color: '#ffffff',
+		},
+		iconTheme: {
+			primary: '#ffffff',
+			secondary: '#dc2626',
+		},
+	});
+};
+
+export const showStudentUpdatedToast = (message) => {
+	// Get the current dark mode setting
+	const isDarkMode = document.documentElement.classList.contains('dark') ||
+		document.querySelector('div[class*="bg-gray-900"]') !== null;
+
+	return toast.success(message, {
+		style: {
+			border: isDarkMode ? '1px solid #eab308' : '1px solid #ca8a04',
+			backgroundColor: isDarkMode ? '#854d0e' : '#fef9c3',
+			color: isDarkMode ? '#fef9c3' : '#854d0e',
+		},
+		iconTheme: {
+			primary: '#eab308',
+			secondary: isDarkMode ? '#1f2937' : '#ffffff',
+		},
+	});
 };
 
 // Function to update toast
