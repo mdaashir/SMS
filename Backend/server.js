@@ -58,6 +58,16 @@ app.get('/api/swagger.json', (req, res) => {
 // Health check endpoint
 app.get('/health', async (req, res) => {
 	try {
+		if (!require('./config/db').getDb) {
+			logger.info('Health check: Database connection not initialized yet');
+			return res.status(200).json({
+				status: 'starting',
+				service: 'student-management-api',
+				database: 'initializing',
+				timestamp: new Date().toISOString(),
+			});
+		}
+
 		const db = require('./config/db').getDb();
 		const dbStatus = await db.ping();
 
@@ -68,6 +78,17 @@ app.get('/health', async (req, res) => {
 			timestamp: new Date().toISOString(),
 		});
 	} catch (error) {
+		logger.info('Health check failed:', error.message);
+
+		if (error.message?.includes('not initialized')) {
+			return res.status(200).json({
+				status: 'starting',
+				service: 'student-management-api',
+				database: 'initializing',
+				timestamp: new Date().toISOString(),
+			});
+		}
+
 		res.status(500).json({
 			status: 'error',
 			service: 'student-management-api',
@@ -105,20 +126,28 @@ const PORT = parseInt(process.env.PORT || '5000', 10);
 
 // Connect to MongoDB and start the server
 async function startServer() {
+	const server = app.listen(PORT, '0.0.0.0', () => {
+		logger.info(
+			`Server is running on port ${PORT} in ${
+				process.env.NODE_ENV || 'development'
+			} mode`
+		);
+	});
+
 	try {
 		await connectToDatabase();
-
-		app.listen(PORT, '0.0.0.0', () => {
-			logger.info(
-				`Server is running on port ${PORT} in ${
-					process.env.NODE_ENV || 'development'
-				} mode`
-			);
-		});
+		logger.info('Successfully connected to MongoDB');
 	} catch (error) {
-		logger.error('Failed to start server:', error);
-		process.exit(1);
+		logger.error('Database connection error:', error.message);
+		setTimeout(() => {
+			logger.info('Retrying database connection...');
+			connectToDatabase()
+				.then(() => logger.info('Successfully connected to MongoDB on retry'))
+				.catch(err => logger.error('Database retry connection failed:', err.message));
+		}, 10000); // Retry after 10 seconds
 	}
+
+	return server;
 }
 
 startServer();

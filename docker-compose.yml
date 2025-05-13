@@ -27,19 +27,13 @@ services:
       - MONGODB_URI=mongodb://mongodb:27017
       - MONGODB_DBNAME=student_management
       - NODE_ENV=production
-      - ALLOWED_ORIGINS=http://localhost:5173
+      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://localhost:5173
       - LOG_LEVEL=info
     depends_on:
       mongodb:
         condition: service_healthy
     networks:
       - sms
-    healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:5000/health']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
 
   frontend:
     build:
@@ -59,6 +53,7 @@ services:
 
 volumes:
   mongodb_data:
+    name: sms_mongodb_data
 
 networks:
   sms:
