@@ -38,6 +38,20 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+      
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: sms-frontend
+    restart: always
+    ports:
+      - '80:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - sms
 
 volumes:
   mongodb_data:

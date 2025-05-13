@@ -1,6 +1,9 @@
 node_modules
+dist
 npm-debug.log
 .env
+.env.*
+*.local
 .git
 .gitignore
 *.md
@@ -9,3 +12,4 @@ npm-debug.log
 *.log
 coverage
 .DS_Store
+stats.html 
