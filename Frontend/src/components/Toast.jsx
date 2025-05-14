@@ -9,14 +9,15 @@ export const ToastContainer = () => {
 	return (
 		<Toaster
 			position='top-right'
-			toastOptions={{
-				duration: 2000,
+			toastOptions={ {
+				duration: 3000,
 				style: {
 					borderRadius: '8px',
 					background: darkMode ? '#374151' : '#fff', // gray-700 for dark mode
 					color: darkMode ? '#f3f4f6' : '#333', // gray-100 for dark mode
 					boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
 					padding: '12px 16px',
+					marginBottom: '10px',
 				},
 				success: {
 					iconTheme: {
@@ -37,6 +38,7 @@ export const ToastContainer = () => {
 						border: darkMode ? '1px solid #991b1b' : '1px solid #fee2e2', // red-800 for dark mode
 						backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2', // red-900 for dark mode
 					},
+					duration: 4000,
 				},
 				loading: {
 					iconTheme: {
@@ -48,18 +50,15 @@ export const ToastContainer = () => {
 						backgroundColor: darkMode ? '#1e3a8a' : '#eff6ff', // blue-900 for dark mode
 					},
 				},
-			}}>
+			} }
+			gutter={ 10 }
+		>
 			{(t) => (
 				<div
 					className={`${
 						t.visible ? 'animate-enter' : 'animate-leave'
 					} relative flex max-w-md items-center justify-between rounded-lg shadow-lg`}
-					style={{
-						...t.style,
-						display: 'flex',
-						justifyContent: 'space-between',
-						alignItems: 'center',
-					}}>
+					style={t.style}>
 					<div className='flex items-center'>
 						{t.icon}
 						<p className='px-2'>{t.message}</p>
@@ -102,11 +101,6 @@ export const showErrorToast = (message) => {
 	toast.error(message);
 };
 
-// Function to show loading toast
-export const showLoadingToast = (message) => {
-	return toast.loading(message);
-};
-
 export const showStudentDeletedToast = (message) => {
 	return toast.success(message, {
 		style: {
@@ -137,19 +131,4 @@ export const showStudentUpdatedToast = (message) => {
 			secondary: isDarkMode ? '#1f2937' : '#ffffff',
 		},
 	});
-};
-
-// Function to update toast
-export const updateToast = (id, options) => {
-	toast.update(id, options);
-};
-
-// Function to dismiss toast
-export const dismissToast = (id) => {
-	toast.dismiss(id);
-};
-
-// Function to dismiss all toasts
-export const dismissAllToasts = () => {
-	toast.dismiss();
 };

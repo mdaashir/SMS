@@ -98,8 +98,7 @@ class Student {
 				cursor = cursor.sort(options.sort);
 			}
 
-			const results = await cursor.toArray();
-			return results;
+			return await cursor.toArray();
 		} catch (error) {
 			console.error('Error in Student.find:', error);
 			return [];
@@ -123,16 +122,14 @@ class Student {
 		delete update.studentId;
 
 		try {
-			const result = await db.collection('students').findOneAndUpdate(
+			return await db.collection('students').findOneAndUpdate(
 				query,
-				{ $set: update },
+				{$set: update},
 				{
 					returnDocument: 'after',
-					upsert: false, // Don't create if doesn't exist
+					upsert: false, // Don't create if it doesn't exist
 				}
 			);
-
-			return result;
 		} catch (error) {
 			console.error('Error in findOneAndUpdate:', error);
 			throw error;
@@ -142,8 +139,7 @@ class Student {
 	// Delete student
 	static async findOneAndDelete(query) {
 		const db = getDb();
-		const result = await db.collection('students').findOneAndDelete(query);
-		return result;
+		return await db.collection('students').findOneAndDelete(query);
 	}
 
 	static async countDocuments(query = {}) {

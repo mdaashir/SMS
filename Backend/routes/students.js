@@ -387,12 +387,10 @@ router.put('/:studentId', async (req, res) => {
 		// Create a clean update object without _id
 		const updateData = { ...req.body };
 		delete updateData._id; // Remove _id to prevent immutable field error
-
-		const updatedStudent = await Student.findOneAndUpdate(
+		await Student.findOneAndUpdate(
 			{ studentId },
 			updateData
 		);
-
 		const result = await Student.findOne({ studentId });
 		res.json(result);
 	} catch (error) {

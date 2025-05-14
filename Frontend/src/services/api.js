@@ -78,7 +78,6 @@ const createApiInstance = () => {
 			if (error.response) {
 				// Server responded with an error status
 				const status = error.response.status;
-				const data = error.response.data;
 
 				switch (status) {
 					case 401:
@@ -104,7 +103,7 @@ const createApiInstance = () => {
 				}
 			} else {
 				// Request setup error
-				console.error('API Error:', error.message);
+				console.error('API Error:',  error.response.data);
 			}
 
 			return Promise.reject(error);

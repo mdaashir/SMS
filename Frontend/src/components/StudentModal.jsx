@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from './ThemeContext';
 
-const StudentModal = ({ show, onClose, onSubmit, student }) => {
+const StudentModal = ({ show, onClose, onSubmit, student, programs = [], batchYears = [] }) => {
   const { darkMode } = useTheme();
   const initialFormData = {
     studentId: '',
@@ -47,28 +47,72 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
 
   const validate = () => {
     const newErrors = {};
+    const validationResults = {};
 
-    // Check each field
-    if (!formData.studentId && !student) newErrors.studentId = 'Student ID is required';
-    if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (!formData.phone) newErrors.phone = 'Phone number is required';
-    if (!formData.program) newErrors.program = 'Program is required';
-    if (!formData.batchYear) newErrors.batchYear = 'Batch year is required';
+    // Student ID validation
+    if (!formData.studentId && !student) {
+      newErrors.studentId = 'Student ID is required';
+      validationResults.studentId = 'Student ID is required';
+    } else if (formData.studentId && !/^[A-Za-z0-9-_]+$/.test(formData.studentId)) {
+      newErrors.studentId = 'ID should only contain letters, numbers, hyphens and underscores';
+      validationResults.studentId = 'ID should only contain letters, numbers, hyphens and underscores';
+    }
+
+    // Name validation
+    if (!formData.name) {
+      newErrors.name = 'Name is required';
+      validationResults.name = 'Name is required';
+    } else if (formData.name.length < 2) {
+      newErrors.name = 'Name must be at least 2 characters long';
+      validationResults.name = 'Name must be at least 2 characters long';
+    } else if (!/^[A-Za-z\s.'-]+$/.test(formData.name)) {
+      newErrors.name = 'Name contains invalid characters';
+      validationResults.name = 'Name contains invalid characters';
+    }
 
     // Email validation
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+      validationResults.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+      validationResults.email = 'Please enter a valid email address';
+    }
+
+    // Phone validation
+    if (!formData.phone) {
+      newErrors.phone = 'Phone number is required';
+      validationResults.phone = 'Phone number is required';
+    } else if (!/^[0-9+\-\s()]+$/.test(formData.phone)) {
+      newErrors.phone = 'Phone number should only contain digits, spaces, and +()-';
+      validationResults.phone = 'Phone number should only contain digits, spaces, and +()-';
+    } else if (formData.phone.replace(/[^0-9]/g, '').length < 10) {
+      newErrors.phone = 'Phone number must have at least 10 digits';
+      validationResults.phone = 'Phone number must have at least 10 digits';
+    }
+
+    // Program validation
+    if (!formData.program) {
+      newErrors.program = 'Program is required';
+      validationResults.program = 'Program is required';
+    }
+
+    // Batch year validation
+    if (!formData.batchYear) {
+      newErrors.batchYear = 'Batch year is required';
+      validationResults.batchYear = 'Batch year is required';
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return { isValid: Object.keys(newErrors).length === 0, validationResults };
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (validate()) {
+    const { isValid, validationResults } = validate();
+    
+    if (isValid) {
       const cleanFormData = {
         studentId: formData.studentId,
         name: formData.name,
@@ -79,6 +123,9 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
       };
 
       onSubmit(cleanFormData);
+    } else {
+      // Return validation errors to parent component
+      onSubmit(null, validationResults);
     }
   };
 
@@ -216,12 +263,12 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               } focus:border-transparent focus:outline-none focus:ring-2 transition-all`}
             >
               <option value="">Select program</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Information Technology">Information Technology</option>
-              <option value="Data Science">Data Science</option>
-              <option value="Cybersecurity">Cybersecurity</option>
-              <option value="Software Engineering">Software Engineering</option>
-              <option value="Artificial Intelligence">Artificial Intelligence</option>
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Cybersecurity">Cybersecurity</option>
+                  <option value="Software Engineering">Software Engineering</option>
+                  <option value="Artificial Intelligence">Artificial Intelligence</option>
             </select>
             {errors.program && (
               <p className="text-red-500 text-xs mt-1">{errors.program}</p>
@@ -246,11 +293,11 @@ const StudentModal = ({ show, onClose, onSubmit, student }) => {
               } focus:border-transparent focus:outline-none focus:ring-2 transition-all`}
             >
               <option value="">Select batch year</option>
-              <option value="2020">2020</option>
-              <option value="2021">2021</option>
-              <option value="2022">2022</option>
-              <option value="2023">2023</option>
-              <option value="2024">2024</option>
+                  <option value="2020">2020</option>
+                  <option value="2021">2021</option>
+                  <option value="2022">2022</option>
+                  <option value="2023">2023</option>
+                  <option value="2024">2024</option>
             </select>
             {errors.batchYear && (
               <p className="text-red-500 text-xs mt-1">{errors.batchYear}</p>

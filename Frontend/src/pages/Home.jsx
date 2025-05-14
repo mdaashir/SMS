@@ -14,7 +14,7 @@ const Home = () => {
 	});
 
 	useEffect(() => {
-		fetchStats();
+		fetchStats().then();
 	}, []);
 
 	const fetchStats = async () => {

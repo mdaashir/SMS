@@ -1,19 +1,19 @@
-import { defineConfig } from 'vite';
+import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
-import { visualizer } from 'rollup-plugin-visualizer';
+import {visualizer} from 'rollup-plugin-visualizer';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-	const config = {
+	return {
 		plugins: [
 			react(),
 			mode === 'analyze' &&
-				visualizer({
-					open: true,
-					filename: 'dist/stats.html',
-					gzipSize: true,
-					brotliSize: true,
-				}),
+			visualizer({
+				open: true,
+				filename: 'dist/stats.html',
+				gzipSize: true,
+				brotliSize: true,
+			}),
 		].filter(Boolean),
 		build: {
 			minify: 'terser',
@@ -35,6 +35,4 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 	};
-
-	return config;
 });

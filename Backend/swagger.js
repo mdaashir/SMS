@@ -8,8 +8,8 @@ const options = {
 			version: '1.0.0',
 			description: 'A simple API for managing student records',
 			contact: {
-				name: 'API Support',
-				email: 'support@example.com',
+				name: 'mdaashir',
+				email: 's.mohamedaashir@gmail.com',
 			},
 		},
 		servers: [

@@ -98,25 +98,7 @@ export const getStudentStats = async () => {
 	}
 };
 
-// Get students by program
-export const getStudentsByProgram = async (program) => {
-	try {
-		if (!program) {
-			throw new Error('Program is required');
-		}
 
-		const encodedProgram = encodeURIComponent(program);
-		const response = await api.get(`/students/program/${encodedProgram}`);
-
-		if (!response.data || !Array.isArray(response.data)) {
-			throw new Error('Invalid response format');
-		}
-
-		return response.data;
-	} catch (error) {
-		handleApiError(error, 'Error fetching students by program');
-	}
-};
 
 // Update a student
 export const updateStudent = async (studentId, student) => {

@@ -108,7 +108,7 @@ app.use((req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
 	logger.error('Error:', err);
 
 	// Determine appropriate status code
@@ -150,7 +150,7 @@ async function startServer() {
 	return server;
 }
 
-startServer();
+startServer().then();
 
 // Handle Ctrl+C shutdown
 process.on('SIGINT', async () => {

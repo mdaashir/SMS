@@ -7,9 +7,6 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import {
   showSuccessToast,
   showErrorToast,
-  showLoadingToast,
-  dismissToast,
-  updateToast,
   showStudentDeletedToast,
   showStudentUpdatedToast
 } from '../components/Toast';
@@ -17,7 +14,6 @@ import {
   getAllStudents,
   getPaginatedStudents,
   deleteStudent,
-  getStudentsByProgram,
   createStudent,
   updateStudent
 } from '../services/StudentService';
@@ -109,7 +105,7 @@ const Students = () => {
 
 
   useEffect(() => {
-    fetchPaginatedStudents();
+    fetchPaginatedStudents().then();
   }, [fetchPaginatedStudents]);
 
   useEffect(() => {
@@ -176,8 +172,27 @@ const Students = () => {
     }
   }, [studentToDelete, fetchPaginatedStudents]);
 
-  const handleFormSubmit = useCallback(async (formData) => {
+  const handleFormSubmit = useCallback(async (formData, validationErrors) => {
     if (!formData) {
+      if (validationErrors) {
+        if (validationErrors.studentId) {
+          showErrorToast(`Student ID: ${validationErrors.studentId}`);
+        }
+        if (validationErrors.name) {
+          showErrorToast(`Name: ${validationErrors.name}`);
+        }
+        if (validationErrors.phone) {
+          showErrorToast(`Phone: ${validationErrors.phone}`);
+        }
+        const otherErrors = Object.entries(validationErrors)
+          .filter(([key]) => !['studentId', 'name', 'phone'].includes(key))
+          .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`);
+
+        if (otherErrors.length > 0) {
+          showErrorToast(otherErrors.join(', '));
+        }
+        return;
+      }
       showErrorToast('Invalid form data');
       return;
     }
@@ -388,10 +403,10 @@ const Students = () => {
         </div>
       ) : (
         <>
-          <StudentTable 
-            students={filteredStudents} 
-            onEdit={handleEditStudent} 
-            onDelete={handleDeleteClick} 
+          <StudentTable
+            students={filteredStudents}
+            onEdit={handleEditStudent}
+            onDelete={handleDeleteClick}
             currentPage={currentPage}
             totalPages={validTotalPages}
             onPageChange={handlePageChange}
