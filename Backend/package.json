@@ -16,7 +16,7 @@
 	"license": "MIT",
 	"description": "Backend for SMS application",
 	"dependencies": {
-		"compression": "^1.7.4",
+		"compression": "^1.8.1",
 		"cors": "^2.8.5",
 		"dotenv": "^16.5.0",
 		"express": "^5.1.0",
